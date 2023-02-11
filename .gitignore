@@ -1,0 +1,6 @@
+*~
+.DS_Store
+.swo
+.swp
+__pycache__/
+venv/
