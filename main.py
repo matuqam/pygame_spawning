@@ -14,19 +14,19 @@ camera = Camera(display)
 engine.camera = camera
 
 
-protagonist = Entity(Rect(0,0, 16, 16), color=(250,250,250))
+protagonist = Entity(Rect(0,0, 24, 24), color=(250,250,250), speed=2)
 
 statics = []
 for i in range(20):
-    entity = Entity(Rect(i*20,i*20, 16, 16), parallax=0.5, color=(250,150,150))
-    # entity.movement = Vector2d(choice((-1, 1)), 0)
+    entity = Entity(Rect(i*20+60,i*20, 16, 16), parallax=1, color=(250,150,150))
     entity.add_destination(Vector2d(50, 380))
     entity.add_destination(Vector2d(randint(0, display.get_width()), randint(0, display.get_height())))
     entity.add_destination(Vector2d(randint(0, display.get_width()), randint(0, display.get_height())))
-    print(f'{entity.destinations=}')
+    entity.add_destination(Vector2d(randint(0, display.get_width()), randint(0, display.get_height())))
     statics.append(entity)
 
-elements = statics + [protagonist]
+# elements = statics + [protagonist]
+elements = Entities(protagonist, statics)
 
 
 def main_loop():
@@ -40,8 +40,16 @@ def main_loop():
         camera.shake()
         # protagonist.move()
 
-        for element in sorted(elements, key=lambda e: e.parallax, reverse=False):
+        # manage collisions with protagonist
+        elements.tick()
+
+        protagonist.move()
+
+        # for element in sorted(elements, key=lambda e: e.parallax, reverse=False):
+        for element in sorted(elements.entities, key=lambda e: e.parallax, reverse=False):
             element.move()
+
+        for element in sorted(elements.entities+[protagonist], key=lambda e: e.parallax, reverse=False):
             pygame.draw.rect(camera.surface, color=element.color, rect=camera_draw(camera, element.rect, element.parallax))
 
         pygame.display.update()

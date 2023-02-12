@@ -40,46 +40,46 @@ class EventManager:
         elif key == MoveKey.FORWARD.value:
             protagonist.parallax *= 2
         elif key == MoveKey.RIGHT.value:
-            protagonist.movement.x += 1
+            protagonist.movement.x += protagonist.speed
         elif key == MoveKey.LEFT.value:
-            protagonist.movement.x += -1
+            protagonist.movement.x += -protagonist.speed
         elif key == MoveKey.UP.value:
-            protagonist.movement.y += -1
+            protagonist.movement.y += -protagonist.speed
         elif key == MoveKey.DOWN.value:
-            protagonist.movement.y += 1
+            protagonist.movement.y += protagonist.speed
         elif key == MoveKey.CAMERA_BACKWARD.value:
             camera.parallax /= 2
         elif key == MoveKey.CAMERA_FORWARD.value:
             camera.parallax *= 2
         elif key == MoveKey.CAMERA_RIGHT.value:
-            camera.movement.x += 1
+            camera.movement.x += protagonist.speed
         elif key == MoveKey.CAMERA_LEFT.value:
-            camera.movement.x += -1
+            camera.movement.x += -protagonist.speed
         elif key == MoveKey.CAMERA_UP.value:
-            camera.movement.y += -1
+            camera.movement.y += -protagonist.speed
         elif key == MoveKey.CAMERA_DOWN.value:
-            camera.movement.y += 1
+            camera.movement.y += protagonist.speed
         elif key == MoveKey.CAMERA_SHAKE.value:
             camera.shake(duration=3, amplitude=2, time_unit=10)
 
     @classmethod
     def key_up(cls, key:MoveKey, protagonist:'Entity|Camera'):
         if key == MoveKey.RIGHT.value:
-            protagonist.movement.x -= 1
+            protagonist.movement.x -= protagonist.speed
         elif key == MoveKey.LEFT.value:
-            protagonist.movement.x -= -1
+            protagonist.movement.x -= -protagonist.speed
         elif key == MoveKey.UP.value:
-            protagonist.movement.y -= -1
+            protagonist.movement.y -= -protagonist.speed
         elif key == MoveKey.DOWN.value:
-            protagonist.movement.y -= 1
+            protagonist.movement.y -= protagonist.speed
         elif key == MoveKey.CAMERA_RIGHT.value:
-            camera.movement.x -= 1
+            camera.movement.x -= protagonist.speed
         elif key == MoveKey.CAMERA_LEFT.value:
-            camera.movement.x -= -1    
+            camera.movement.x -= -protagonist.speed    
         elif key == MoveKey.CAMERA_UP.value:
-            camera.movement.y -= -1
+            camera.movement.y -= -protagonist.speed
         elif key == MoveKey.CAMERA_DOWN.value:
-            camera.movement.y  -=  1 
+            camera.movement.y -= protagonist.speed 
     
     @classmethod
     def quit(cls):
@@ -136,6 +136,43 @@ class Vector2d:
     __rmul__ = __mul__
 
 
+class Collision:
+    '''
+    Temporary entity can be used as an explosion. Often the result of a collision
+    '''
+    def __init__(self, rect:Rect, parallax:int=1, color=(10,10,10), speed=1, timer=1000):
+        self.rect = rect
+        self.parallax = parallax
+        self.color=color
+        self.speed = speed
+        self.temporary = True
+        self.timer = timer
+    
+    def tick(self):
+        '''
+        Perform actions that should be done at each tick of the game.
+            * move
+            * decrement self.timer
+        '''
+        self.timer -= 1
+
+    @staticmethod
+    def get_collissions(rect:Rect, others:list[Rect])->List[Rect]:
+        '''
+        Get a list of indices from others that collide with rect.
+
+        rect:
+            Rect to check for collisions against
+
+        others:
+            List of Rect to get colliders from
+
+        Return:
+            list of indices of the others list that collided with rect
+        '''
+        return rect.collidelistall(others)
+
+
 class Entity:
     '''Used for the "playable" objects as well as NPCs'''
     def __init__(self, rect:Rect, parallax:int=1, color=(150,150,150), speed=1):
@@ -146,6 +183,10 @@ class Entity:
         self.movement = Vector2d(x=0,y=0)
         self.destinations = []
         self.previous_pos = []
+        self.trail = 1
+
+    def __repr__(self):
+        return f'{self.rect}'
 
     def _has_destination(self):
         return len(self.destinations) > 0
@@ -156,9 +197,16 @@ class Entity:
     def pos_center(self):
         return Vector2d(self.rect.centerx, self.rect.centery)
 
+    def trail_length(self, change:int):
+        '''
+        change:
+            the change in length of the trail to be drawn
+        '''
+        self.trail += change
+
     def _draw_position_trail(self):
         self.previous_pos.append(self.pos_center())
-        for pos in self.previous_pos[-60:]:
+        for pos in self.previous_pos[-self.trail:]:
             pygame.draw.rect(camera.surface, BLUE, camera_draw(camera, Rect(pos.x, pos.y, 4, 4), self.parallax))
 
     def move(self, movement:Vector2d=None):
@@ -169,7 +217,6 @@ class Entity:
         self._draw_position_trail()
         
         if self._has_destination():
-            print(f'position (x:{self.rect.x}, y:{self.rect.y}; target: {self.destinations[0]}')
             delta = self.destinations[0] - Vector2d(self.rect.x, self.rect.y)
             if delta.magnitude() <= self.speed * 10:
                 self.cycle_destination()
@@ -185,6 +232,41 @@ class Entity:
     def cycle_destination(self):
         self.destinations = self.destinations[1:] + self.destinations[:1]
 
+
+class Entities:
+    '''
+    Has the list of entities in the game.
+    It holds the logic to despawn an entity.
+    '''
+    def __init__(self, protagonist:Rect, objects:List[Entity|Collision]=None):
+        self.entities = [] if objects is None else objects
+        self.protatonist = protagonist
+    
+    def tick(self):
+        # check for collisions with protagonist
+        collisions = Collision.get_collissions(self.protatonist.rect, self.entities)
+        if len(collisions) > 0:
+            camera.shake(duration=0.5, amplitude=2, time_unit=10)
+            self.protatonist.trail_length(change=5)
+        # remove elements that collide with protagonist
+        self.entities = self.despawn(collisions)
+
+    def spawn(self, object:Entity|Collision):
+        '''
+        object:
+            object to add to self.entities
+        '''
+        self.entities.append(object)
+    
+    def despawn(self, indecies):
+        '''
+        indecies:
+            indecies of entities to be removed from self.entities
+        
+        return:
+            list purged of index entitie
+        '''
+        return [self.entities[i] for i in range(len(self.entities)) if i not in indecies]
 
 
 class Camera:
