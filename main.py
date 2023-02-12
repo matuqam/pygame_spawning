@@ -19,7 +19,11 @@ protagonist = Entity(Rect(0,0, 16, 16), color=(250,250,250))
 statics = []
 for i in range(20):
     entity = Entity(Rect(i*20,i*20, 16, 16), parallax=0.5, color=(250,150,150))
-    entity.movement = Vector2d(choice((-1, 1)), 0)
+    # entity.movement = Vector2d(choice((-1, 1)), 0)
+    entity.add_destination(Vector2d(50, 380))
+    entity.add_destination(Vector2d(randint(0, display.get_width()), randint(0, display.get_height())))
+    entity.add_destination(Vector2d(randint(0, display.get_width()), randint(0, display.get_height())))
+    print(f'{entity.destinations=}')
     statics.append(entity)
 
 elements = statics + [protagonist]

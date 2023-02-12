@@ -4,11 +4,14 @@
 
 # TODO -- fuck yeah
 * [x] spawn 10 npc
-* [ ] set npc movement to go back and forth between two destinations
+* [x] set npc movement to go back and forth between 2 destinations
     * [x] allow movement
-    * [ ] setable destination
-    * [ ] setable secondary destination
-    * [ ] toggle 1st, 2nd destinations
+    * [x] setable destination
+    * [x] setable secondary destination
+    * [x] toggle 1st, 2nd destinations
+    * [x] debug destinations as objects tend to get stuck at the start or at a destination
+* [x] allow npc to cycle through a list of destinations
+* [ ] add trail of previous locations
 * [ ] allow bullet time for a "hero" entity
 * [ ] allow bullet time to affect a list of entities
 * [ ] allow scallable magnitude for the bullet effect
