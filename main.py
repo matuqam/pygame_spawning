@@ -34,11 +34,11 @@ def main_loop():
         for event in pygame.event.get():
             EventManager.manage_event(event, protagonist)
 
+        display.fill(color=(150,150,150))
+
         camera.move()
         camera.shake()
         # protagonist.move()
-
-        display.fill(color=(150,150,150))
 
         for element in sorted(elements, key=lambda e: e.parallax, reverse=False):
             element.move()

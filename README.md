@@ -11,7 +11,7 @@
     * [x] toggle 1st, 2nd destinations
     * [x] debug destinations as objects tend to get stuck at the start or at a destination
 * [x] allow npc to cycle through a list of destinations
-* [ ] add trail of previous locations
+* [x] add trail of previous locations
 * [ ] allow bullet time for a "hero" entity
 * [ ] allow bullet time to affect a list of entities
 * [ ] allow scallable magnitude for the bullet effect

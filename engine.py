@@ -145,15 +145,29 @@ class Entity:
         self.speed = speed
         self.movement = Vector2d(x=0,y=0)
         self.destinations = []
+        self.previous_pos = []
 
     def _has_destination(self):
         return len(self.destinations) > 0
+
+    def position(self):
+        return Vector2d(self.rect.x, self.rect.y)
+    
+    def pos_center(self):
+        return Vector2d(self.rect.centerx, self.rect.centery)
+
+    def _draw_position_trail(self):
+        self.previous_pos.append(self.pos_center())
+        for pos in self.previous_pos[-60:]:
+            pygame.draw.rect(camera.surface, BLUE, camera_draw(camera, Rect(pos.x, pos.y, 4, 4), self.parallax))
 
     def move(self, movement:Vector2d=None):
         '''
         movement: Vector2d
             allows to temporarly override the Entitys stored movement vector.
         '''
+        self._draw_position_trail()
+        
         if self._has_destination():
             print(f'position (x:{self.rect.x}, y:{self.rect.y}; target: {self.destinations[0]}')
             delta = self.destinations[0] - Vector2d(self.rect.x, self.rect.y)
@@ -188,6 +202,9 @@ class Camera:
         self.shake_amplitude = 0
         self.shake_unit = 1000
         self.preshake = Vector2d(None, None)
+
+    def position(self):
+        return Vector2d(self.rect.x, self.rect.y)
 
     def move(self, movement:Vector2d=None):
         '''
