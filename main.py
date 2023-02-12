@@ -1,75 +1,52 @@
-import pygame
-from pygame.locals import *
+from imports import *
 
+import engine
+from engine import *
 from npc import make_npc
-
-SCREEN_RED=(200, 10, 10)
-SCREEN_GREEN=(10, 200, 10)
-SCREEN_BLUE=(10, 10, 200)
-SCREEN_GREY=(125,125,125)
-
-
-def myvars():
-    # global obj
-    # global face
-    global update
-    # obj = Rect
-    # face = pygame.Surface
-    update = pygame.display.update
-
-def mystuff():
-    global avatar_obj
-    global avatar_face
-    # global npcs
-    # dim=(8,16)
-    # avatar_obj = Rect(0,0,*dim)
-    # avatar_face = pygame.Surface(dim)
-    # screen.blit(avatar_face, avatar_obj)
-
-def myrandom_npcs(n=10):
-    # global npcs
-    npcs = []
-    for i in range(n):
-        npcs.append(make_npc(size=(4,4), screen=screen))
-    return npcs
-
-def mydo():
-    myvars()
-    mystuff()
-    for i in range(16):
-        myrandom_npcs(1000)
-        update()
-    # myrandom_npcs(60000)
-    # update()
+import test
 
 
 pygame.init()
 
-# init screen
-screen = pygame.display.set_mode(size=(800, 400))
-screen.fill(color=SCREEN_GREY)
-pygame.display.update()
+display = pygame.display.set_mode(size=(800, 400))
+display.fill(color=SCREEN_GREY)
+camera = Camera(display)
+engine.camera = camera
 
 
-def move_by_update_only_rect(obj, face, x, y, parent_surface):
-    '''
-    move rect obj by x and y
-    draw object image on parent_surface (aka sprite on screen)
-    refresh parent_surface (aka screen) by using fill
-    update display'''
-    
-    obj.x += x; obj.y +=y
-    parent_surface.fill(SCREEN_RED)
-    parent_surface.blit(face, obj)
-    pygame.display.update()
+protagonist = Entity(Rect(0,0, 16, 16), color=(250,250,250))
 
-while True:
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            exit()
+statics = []
+for i in range(20):
+    entity = Entity(Rect(i*20,i*20, 16, 16), parallax=0.5, color=(250,150,150))
+    entity.movement = Vector2d(choice((-1, 1)), 0)
+    statics.append(entity)
+
+elements = statics + [protagonist]
+
+
+def main_loop():
+    while True:
+        for event in pygame.event.get():
+            EventManager.manage_event(event, protagonist)
+
+        camera.move()
+        camera.shake()
+        # protagonist.move()
+
+        display.fill(color=(150,150,150))
+
+        for element in sorted(elements, key=lambda e: e.parallax, reverse=False):
+            element.move()
+            pygame.draw.rect(camera.surface, color=element.color, rect=camera_draw(camera, element.rect, element.parallax))
+
+        pygame.display.update()
 
 ##
 #  TESTING
 # ##### 
-mydo()
+# test.screen = display
+# test.mydo()
+
+main_loop()
 

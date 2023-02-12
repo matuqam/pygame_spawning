@@ -1,14 +1,8 @@
-from typing import Tuple
-from random import randint
+from imports import *
 
 import pygame
 from pygame.locals import *
 
-RED = (255,0,0)
-GREEN = (0,0,255)
-BLUE = (0,0,255)
-RED = (200,125,125)
-BLUE=(10, 10, 200)
 
 def make_npc(obj:Rect=None, face:pygame.Surface=None, pos:Tuple[int, int]=None, 
         size:Tuple[int,int]=None, screen=None, update=False)->Rect:
@@ -26,7 +20,7 @@ def make_npc(obj:Rect=None, face:pygame.Surface=None, pos:Tuple[int, int]=None,
         size = (obj.width, obj.height)
     if face is None:
         face = pygame.Surface(size=size)
-        face.fill(RED)
+        face.fill(REDISH)
     if screen is not None:
         screen.blit(face, obj)
         if update:
